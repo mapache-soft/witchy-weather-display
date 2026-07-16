@@ -12,14 +12,15 @@ from astral.moon import phase
 from astral import LocationInfo
 from astral.sun import sun
 from datetime import date, datetime
-import math
 import random
 logging.basicConfig(level=logging.DEBUG)
 
-LAVENDER = (182, 160, 210)
-DARK_LAVENDER = (100, 80, 140)
-LIGHT = (230, 220, 245)
-SHADOW = (140, 120, 170)
+WHITE        = (255, 255, 255)
+BLACK        = (0, 0, 0)
+DARK_PURPLE  = (60, 20, 90)
+BLUE         = (0, 80, 200)
+YELLOW       = (230, 180, 0)
+SHADOW       = (180, 160, 100)
 
 FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 
@@ -35,18 +36,11 @@ PHASE_NAMES = [
 ]
 
 DAY_PLANETS = {
-    0: "moon",       # monday
-    1: "mars",       # tuesday
-    2: "mercury",    # wednesday
-    3: "jupiter",    # thursday
-    4: "venus",      # friday
-    5: "saturn",     # saturday
-    6: "sun",        # sunday
+    0: "moon", 1: "mars", 2: "mercury",
+    3: "jupiter", 4: "venus", 5: "saturn", 6: "sun",
 }
 
-PLANETARY_HOURS = [
-    "sun", "venus", "mercury", "moon", "saturn", "jupiter", "mars"
-]
+PLANETARY_HOURS = ["sun", "venus", "mercury", "moon", "saturn", "jupiter", "mars"]
 
 def get_phase_name(phase_value):
     for lo, hi, name in PHASE_NAMES:
@@ -58,20 +52,17 @@ def get_day_planet():
     return DAY_PLANETS[date.today().weekday()]
 
 def get_planetary_hour():
-    # traditional chaldean order starting from sunrise
     city = LocationInfo("Vienna", "Austria", "Europe/Vienna", 48.2082, 16.3738)
     s = sun(city.observer, date=date.today())
     sunrise = s['sunrise'].replace(tzinfo=None)
     now = datetime.now()
     hour_index = int((now - sunrise).total_seconds() // 3600)
     day_index = date.today().weekday()
-    # map monday=moon etc to chaldean starting planet
-    day_start = [3, 6, 2, 4, 5, 1, 0][day_index]  # starting planet index per day
-    planet = PLANETARY_HOURS[(day_start + hour_index) % 7]
-    return planet
+    day_start = [3, 6, 2, 4, 5, 1, 0][day_index]
+    return PLANETARY_HOURS[(day_start + hour_index) % 7]
 
 def draw_moon(draw, cx, cy, radius, phase_value):
-    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=LIGHT)
+    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=YELLOW)
     if phase_value < 14:
         fraction = phase_value / 14.0
         shadow_offset = int(radius * (1 - 2 * fraction))
@@ -82,31 +73,39 @@ def draw_moon(draw, cx, cy, radius, phase_value):
         shadow_offset = int(radius * (2 * fraction - 1))
         draw.ellipse((cx + shadow_offset - radius, cy - radius,
                       cx + shadow_offset + radius, cy + radius), fill=SHADOW)
-    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_LAVENDER, width=2)
+    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_PURPLE, width=2)
 
 def draw_cat(draw, cx, cy, size):
     # head
-    draw.ellipse((cx-size, cy-size, cx+size, cy+size), outline=DARK_LAVENDER, width=2)
+    draw.ellipse((cx-size, cy-size, cx+size, cy+size), fill=BLACK, outline=BLACK)
     # ears
     ear = size // 2
-    draw.polygon([(cx-size, cy-size+4), (cx-size+ear, cy-size-ear), (cx-ear, cy-size+4)], outline=DARK_LAVENDER, fill=LAVENDER)
-    draw.polygon([(cx+size, cy-size+4), (cx+size-ear, cy-size-ear), (cx+ear, cy-size+4)], outline=DARK_LAVENDER, fill=LAVENDER)
-    # eyes
+    draw.polygon([
+        (cx-size, cy-size+4),
+        (cx-size+ear, cy-size-ear),
+        (cx-ear, cy-size+4)
+    ], fill=BLACK)
+    draw.polygon([
+        (cx+size, cy-size+4),
+        (cx+size-ear, cy-size-ear),
+        (cx+ear, cy-size+4)
+    ], fill=BLACK)
+    # blue eyes
     eye_y = cy - size // 4
-    draw.ellipse((cx-size//2-3, eye_y-3, cx-size//2+3, eye_y+3), fill=DARK_LAVENDER)
-    draw.ellipse((cx+size//2-3, eye_y-3, cx+size//2+3, eye_y+3), fill=DARK_LAVENDER)
+    draw.ellipse((cx-size//2-4, eye_y-4, cx-size//2+4, eye_y+4), fill=BLUE)
+    draw.ellipse((cx+size//2-4, eye_y-4, cx+size//2+4, eye_y+4), fill=BLUE)
     # nose
-    draw.polygon([(cx, cy+4), (cx-4, cy), (cx+4, cy)], fill=DARK_LAVENDER)
+    draw.polygon([(cx, cy+4), (cx-3, cy), (cx+3, cy)], fill=WHITE)
     # whiskers
-    draw.line((cx-size, cy, cx-size//2-4, cy+2), fill=DARK_LAVENDER, width=1)
-    draw.line((cx-size, cy+8, cx-size//2-4, cy+4), fill=DARK_LAVENDER, width=1)
-    draw.line((cx+size, cy, cx+size//2+4, cy+2), fill=DARK_LAVENDER, width=1)
-    draw.line((cx+size, cy+8, cx+size//2+4, cy+4), fill=DARK_LAVENDER, width=1)
+    draw.line((cx-size, cy,   cx-size//2-4, cy+2),  fill=WHITE, width=1)
+    draw.line((cx-size, cy+8, cx-size//2-4, cy+4),  fill=WHITE, width=1)
+    draw.line((cx+size, cy,   cx+size//2+4, cy+2),  fill=WHITE, width=1)
+    draw.line((cx+size, cy+8, cx+size//2+4, cy+4),  fill=WHITE, width=1)
 
 try:
     epd = epd7in3e.EPD()
     epd.init()
-    Himage = Image.new('RGB', (epd.width, epd.height), LAVENDER)
+    Himage = Image.new('RGB', (epd.width, epd.height), WHITE)
     draw = ImageDraw.Draw(Himage)
 
     font_sm = ImageFont.truetype(FONT_PATH, 22)
@@ -118,26 +117,25 @@ try:
 
     # moon phase name
     phase_name = get_phase_name(moon_phase)
-    bbox = draw.textbbox((0,0), phase_name, font=font_md)
+    bbox = draw.textbbox((0, 0), phase_name, font=font_md)
     tw = bbox[2] - bbox[0]
-    draw.text(((epd.width - tw) // 2, epd.height//2 + 140), phase_name, font=font_md, fill=DARK_LAVENDER)
+    draw.text(((epd.width - tw) // 2, epd.height//2 + 140), phase_name, font=font_md, fill=DARK_PURPLE)
 
-    # day planet + planetary hour
-    day_planet = get_day_planet()
-    planetary_hour = get_planetary_hour()
-    draw.text((30, 30), f"day of {day_planet}", font=font_sm, fill=DARK_LAVENDER)
-    draw.text((30, 60), f"hour of {planetary_hour}", font=font_sm, fill=DARK_LAVENDER)
+    # day + planetary hour — top left, safely clear of cat
+    draw.text((120, 30), f"day of {get_day_planet()}", font=font_sm, fill=DARK_PURPLE)
+    draw.text((120, 60), f"hour of {get_planetary_hour()}", font=font_sm, fill=DARK_PURPLE)
 
-    # cat in random corner
-    margin = 50
+    # cat in random corner, safely away from text
+    CAT_SIZE = 30
+    MARGIN = 50
     corners = [
-        (margin, margin),
-        (epd.width - margin, margin),
-        (margin, epd.height - margin),
-        (epd.width - margin, epd.height - margin),
+        (MARGIN, epd.height - MARGIN),           # bottom left
+        (epd.width - MARGIN, epd.height - MARGIN), # bottom right
+        (epd.width - MARGIN, MARGIN),             # top right
+        # top left reserved for text
     ]
     cx, cy = random.choice(corners)
-    draw_cat(draw, cx, cy, size=30)
+    draw_cat(draw, cx, cy, size=CAT_SIZE)
 
     epd.display(epd.getbuffer(Himage))
     epd.sleep()
