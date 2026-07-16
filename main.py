@@ -189,6 +189,7 @@ try:
     font_sm = ImageFont.truetype(FONT_PATH, 44)
     font_md = ImageFont.truetype(FONT_PATH, 56)
     font_lg = ImageFont.truetype(FONT_PATH, 72)
+    font_xl = ImageFont.truetype(FONT_PATH, 96)
 
     # moon
     moon_phase = phase(date.today())
@@ -222,9 +223,19 @@ try:
         low = "?"
 
     weather_x = 40
-    next_y = draw_text_line(draw, symbol, weather_x, next_y + 30, font_lg, DARK_PURPLE)
-    next_y = draw_text_line(draw, f"{high}°", weather_x, next_y, font_md, RED, spacing=5)
+    temps_y = next_y + 30
+    next_y = draw_text_line(draw, f"{high}°", weather_x, temps_y, font_md, RED, spacing=5)
     draw_text_line(draw, f"{low}°", weather_x, next_y, font_md, BLUE, spacing=50)
+
+    # large weather symbol above the cat
+    cat_cx = epd.width - CAT_X_MARGIN
+    cat_cy = epd.height - CAT_Y_MARGIN
+    sym_bbox = draw.textbbox((0, 0), symbol, font=font_xl)
+    sym_w = sym_bbox[2] - sym_bbox[0]
+    sym_h = sym_bbox[3] - sym_bbox[1]
+    sym_x = cat_cx - sym_w // 2
+    sym_y = (cat_cy - CAT_SIZE) - sym_h - 10
+    draw.text((sym_x, sym_y), symbol, font=font_xl, fill=DARK_PURPLE)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
