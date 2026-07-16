@@ -21,6 +21,7 @@ WHITE        = (255, 255, 255)
 BLACK        = (0, 0, 0)
 DARK_PURPLE  = (60, 20, 90)
 BLUE         = (0, 80, 200)
+RED          = (220, 40, 40)
 ORANGE       = (240, 130, 0)
 YELLOW       = (230, 180, 0)
 SHADOW       = (180, 160, 100)
@@ -222,8 +223,8 @@ try:
 
     weather_x = 40
     next_y = draw_text_line(draw, symbol, weather_x, next_y + 30, font_lg, DARK_PURPLE)
-    next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
-    draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=50)
+    next_y = draw_text_line(draw, f"{high}°", weather_x, next_y, font_md, RED, spacing=5)
+    draw_text_line(draw, f"{low}°", weather_x, next_y, font_md, BLUE, spacing=50)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
@@ -251,9 +252,10 @@ try:
 
     # cat in bottom-right corner, safely away from text
     CAT_SIZE = 80
-    CAT_MARGIN = 100
+    CAT_X_MARGIN = 100
+    CAT_Y_MARGIN = 140
     cat_color = random.choice([BLACK, ORANGE])
-    cx, cy = epd.width - CAT_MARGIN, epd.height - CAT_MARGIN
+    cx, cy = epd.width - CAT_X_MARGIN, epd.height - CAT_Y_MARGIN
     draw_cat(draw, cx, cy, size=CAT_SIZE, color=cat_color)
 
     epd.display(epd.getbuffer(Himage))
