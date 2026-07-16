@@ -57,6 +57,7 @@ PLANET_SYMBOLS = {
 
 WEATHER_LAT = 48.2082
 WEATHER_LON = 16.3738
+WINDY_THRESHOLD = 30
 
 def get_phase_name(phase_value):
     for lo, hi, name in PHASE_NAMES:
@@ -81,8 +82,10 @@ def get_weather_data():
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         "latitude={lat}&longitude={lon}"
-        "&daily=temperature_2m_max,temperature_2m_min,weather_code"
+        "&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max"
         "&forecast_days=1"
+        "&temperature_unit=celsius"
+        "&wind_speed_unit=kmh"
         "&timezone=Europe%2FVienna"
     ).format(lat=WEATHER_LAT, lon=WEATHER_LON)
     try:
@@ -93,6 +96,7 @@ def get_weather_data():
             "high": round(daily["temperature_2m_max"][0]),
             "low": round(daily["temperature_2m_min"][0]),
             "code": daily["weather_code"][0],
+            "wind": daily["wind_speed_10m_max"][0],
         }
     except Exception as e:
         logging.warning("weather fetch failed: %s", e)
@@ -113,6 +117,11 @@ def get_weather_symbol(code):
         return "⚡"
     return "☁"
 
+def get_wind_message(max_wind_kmh):
+    if max_wind_kmh >= WINDY_THRESHOLD:
+        return "It fucken WIMDY"
+    return None
+
 def draw_text_line(draw, text, x, y, font, fill, spacing=10):
     bbox = draw.textbbox((0, 0), text, font=font)
     draw.text((x, y), text, font=font, fill=fill)
@@ -130,6 +139,8 @@ def draw_moon(draw, cx, cy, radius, phase_value):
         shadow_offset = int(radius * (2 * fraction - 1))
         draw.ellipse((cx + shadow_offset - radius, cy - radius,
                       cx + shadow_offset + radius, cy + radius), fill=SHADOW)
+    # keep the shadow inside the moon disk
+    draw.ellipse((cx-2*radius, cy-2*radius, cx+2*radius, cy+2*radius), outline=WHITE, width=radius)
     draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_PURPLE, width=2)
 
 def draw_cat(draw, cx, cy, size, color=BLACK):
@@ -214,6 +225,15 @@ try:
     next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
     draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=50)
 
+    # windy warning — above the moon
+    if weather and weather["wind"] >= WINDY_THRESHOLD:
+        wimdy_text = "It fucken WIMDY"
+        wimdy_bbox = draw.textbbox((0, 0), wimdy_text, font=font_sm)
+        wimdy_w = wimdy_bbox[2] - wimdy_bbox[0]
+        wimdy_h = wimdy_bbox[3] - wimdy_bbox[1]
+        moon_top = (epd.height // 2 + 25) - 120
+        draw.text(((epd.width - wimdy_w) // 2, moon_top - wimdy_h - 10), wimdy_text, font=font_sm, fill=DARK_PURPLE)
+
     # favours — top right, dark purple
     zodiac = random.choice(["♈", "♑", "♎"])
     label = "Favours: "
@@ -231,7 +251,7 @@ try:
 
     # cat in bottom-right corner, safely away from text
     CAT_SIZE = 80
-    CAT_MARGIN = 140
+    CAT_MARGIN = 100
     cat_color = random.choice([BLACK, ORANGE])
     cx, cy = epd.width - CAT_MARGIN, epd.height - CAT_MARGIN
     draw_cat(draw, cx, cy, size=CAT_SIZE, color=cat_color)
