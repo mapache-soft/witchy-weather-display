@@ -200,6 +200,7 @@ try:
 
     font_sm = ImageFont.truetype(FONT_PATH, 44)
     font_md = ImageFont.truetype(FONT_PATH, 56)
+    font_lg = ImageFont.truetype(FONT_PATH, 72)
     MARGIN = 80
 
     # moon
@@ -212,11 +213,12 @@ try:
     tw = bbox[2] - bbox[0]
     draw.text(((epd.width - tw) // 2, epd.height//2 + 195), phase_name, font=font_md, fill=DARK_PURPLE)
 
-    # day + planetary hour — top left, safely clear of cat
+    # day + planetary hour — top left
+    top_left_x = 40
     day_symbol = PLANET_SYMBOLS[get_day_planet()]
     hour_symbol = PLANET_SYMBOLS[get_planetary_hour()]
-    draw.text((120, 50), f"Day: {day_symbol}", font=font_sm, fill=DARK_PURPLE)
-    draw.text((120, 110), f"Hour: {hour_symbol}", font=font_sm, fill=DARK_PURPLE)
+    next_y = draw_text_line(draw, f"Day: {day_symbol}", top_left_x, 30, font_sm, DARK_PURPLE)
+    next_y = draw_text_line(draw, f"Hour: {hour_symbol}", top_left_x, next_y, font_sm, DARK_PURPLE)
 
     # weather — left side, below day/hour
     weather = get_weather_data()
@@ -232,9 +234,9 @@ try:
         wind_message = "?"
 
     weather_x = 40
-    next_y = draw_text_line(draw, symbol, weather_x, 120, font_md, DARK_PURPLE)
-    next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_sm, DARK_PURPLE)
-    next_y = draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_sm, DARK_PURPLE)
+    next_y = draw_text_line(draw, symbol, weather_x, next_y + 30, font_lg, DARK_PURPLE)
+    next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
+    next_y = draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
     if wind_message:
         draw_wrapped_text(draw, wind_message, weather_x, next_y, max_width=230, font=font_sm, fill=DARK_PURPLE)
 
