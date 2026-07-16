@@ -56,7 +56,6 @@ PLANET_SYMBOLS = {
 
 WEATHER_LAT = 48.2082
 WEATHER_LON = 16.3738
-WINDY_THRESHOLD = 30
 
 def get_phase_name(phase_value):
     for lo, hi, name in PHASE_NAMES:
@@ -81,10 +80,8 @@ def get_weather_data():
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         "latitude={lat}&longitude={lon}"
-        "&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max"
+        "&daily=temperature_2m_max,temperature_2m_min,weather_code"
         "&forecast_days=1"
-        "&temperature_unit=celsius"
-        "&wind_speed_unit=kmh"
         "&timezone=Europe%2FVienna"
     ).format(lat=WEATHER_LAT, lon=WEATHER_LON)
     try:
@@ -95,7 +92,6 @@ def get_weather_data():
             "high": round(daily["temperature_2m_max"][0]),
             "low": round(daily["temperature_2m_min"][0]),
             "code": daily["weather_code"][0],
-            "wind": daily["wind_speed_10m_max"][0],
         }
     except Exception as e:
         logging.warning("weather fetch failed: %s", e)
@@ -116,37 +112,10 @@ def get_weather_symbol(code):
         return "⚡"
     return "☁"
 
-def get_wind_message(max_wind_kmh):
-    if max_wind_kmh >= WINDY_THRESHOLD:
-        return "It fucken WIMDY"
-    return None
-
 def draw_text_line(draw, text, x, y, font, fill, spacing=10):
     bbox = draw.textbbox((0, 0), text, font=font)
     draw.text((x, y), text, font=font, fill=fill)
     return y + (bbox[3] - bbox[1]) + spacing
-
-def draw_wrapped_text(draw, text, x, y, max_width, font, fill, spacing=10):
-    words = text.split()
-    if not words:
-        return y
-    lines = []
-    current = words[0]
-    for word in words[1:]:
-        bbox = draw.textbbox((0, 0), current + " " + word, font=font)
-        if bbox[2] - bbox[0] <= max_width:
-            current += " " + word
-        else:
-            lines.append(current)
-            current = word
-    lines.append(current)
-    line_height = 0
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        line_height = max(line_height, bbox[3] - bbox[1])
-    for i, line in enumerate(lines):
-        draw.text((x, y + i * (line_height + spacing)), line, font=font, fill=fill)
-    return y + len(lines) * (line_height + spacing)
 
 def draw_moon(draw, cx, cy, radius, phase_value):
     draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=YELLOW)
@@ -211,14 +180,17 @@ try:
     phase_name = get_phase_name(moon_phase)
     bbox = draw.textbbox((0, 0), phase_name, font=font_md)
     tw = bbox[2] - bbox[0]
-    draw.text(((epd.width - tw) // 2, epd.height//2 + 195), phase_name, font=font_md, fill=DARK_PURPLE)
+    draw.text(((epd.width - tw) // 2, epd.height//2 + 190), phase_name, font=font_md, fill=DARK_PURPLE)
 
     # day + planetary hour — top left
     top_left_x = 40
     day_symbol = PLANET_SYMBOLS[get_day_planet()]
     hour_symbol = PLANET_SYMBOLS[get_planetary_hour()]
-    next_y = draw_text_line(draw, f"Day: {day_symbol}", top_left_x, 30, font_sm, DARK_PURPLE)
-    next_y = draw_text_line(draw, f"Hour: {hour_symbol}", top_left_x, next_y, font_sm, DARK_PURPLE)
+    day_text = f"Day: {day_symbol}"
+    hour_text = f"Hour: {hour_symbol}"
+    day_bbox = draw.textbbox((0, 0), day_text, font=font_sm)
+    next_y = draw_text_line(draw, day_text, top_left_x, 10 - day_bbox[1], font_sm, DARK_PURPLE)
+    next_y = draw_text_line(draw, hour_text, top_left_x, next_y, font_sm, DARK_PURPLE)
 
     # weather — left side, below day/hour
     weather = get_weather_data()
@@ -226,19 +198,15 @@ try:
         symbol = get_weather_symbol(weather["code"])
         high = weather["high"]
         low = weather["low"]
-        wind_message = get_wind_message(weather["wind"])
     else:
         symbol = "?"
         high = "?"
         low = "?"
-        wind_message = "?"
 
     weather_x = 40
     next_y = draw_text_line(draw, symbol, weather_x, next_y + 30, font_lg, DARK_PURPLE)
     next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
-    next_y = draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
-    if wind_message:
-        draw_wrapped_text(draw, wind_message, weather_x, next_y, max_width=230, font=font_sm, fill=DARK_PURPLE)
+    draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=30)
 
     # favours — top right, dark purple
     zodiac = random.choice(["♈", "♑", "♎"])
