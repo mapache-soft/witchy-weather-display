@@ -190,6 +190,9 @@ try:
     font_md = ImageFont.truetype(FONT_PATH, 56)
     font_lg = ImageFont.truetype(FONT_PATH, 72)
     font_xl = ImageFont.truetype(FONT_PATH, 96)
+    CAT_SIZE = 80
+    CAT_X_MARGIN = 100
+    CAT_Y_MARGIN = 140
 
     # moon
     moon_phase = phase(date.today())
@@ -262,9 +265,6 @@ try:
     draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=font_md, fill=DARK_PURPLE)
 
     # cat in bottom-right corner, safely away from text
-    CAT_SIZE = 80
-    CAT_X_MARGIN = 100
-    CAT_Y_MARGIN = 140
     cat_color = random.choice([BLACK, ORANGE])
     cx, cy = epd.width - CAT_X_MARGIN, epd.height - CAT_Y_MARGIN
     draw_cat(draw, cx, cy, size=CAT_SIZE, color=cat_color)
