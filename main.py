@@ -96,6 +96,9 @@ def draw_cat(draw, cx, cy, size):
     draw.ellipse((cx+size//2-4, eye_y-4, cx+size//2+4, eye_y+4), fill=BLUE)
     # nose
     draw.polygon([(cx, cy+4), (cx-3, cy), (cx+3, cy)], fill=WHITE)
+    # mouth
+    draw.line((cx, cy+6, cx-3, cy+10), fill=WHITE, width=1)
+    draw.line((cx, cy+6, cx+3, cy+10), fill=WHITE, width=1)
     # whiskers
     draw.line((cx-size, cy,   cx-size//2-4, cy+2),  fill=WHITE, width=1)
     draw.line((cx-size, cy+8, cx-size//2-4, cy+4),  fill=WHITE, width=1)
@@ -110,6 +113,7 @@ try:
 
     font_sm = ImageFont.truetype(FONT_PATH, 22)
     font_md = ImageFont.truetype(FONT_PATH, 28)
+    MARGIN = 80
 
     # moon
     moon_phase = phase(date.today())
@@ -125,16 +129,24 @@ try:
     draw.text((120, 30), f"day of {get_day_planet()}", font=font_sm, fill=DARK_PURPLE)
     draw.text((120, 60), f"hour of {get_planetary_hour()}", font=font_sm, fill=DARK_PURPLE)
 
-    # cat in random corner, safely away from text
+    # today favours — top right, dark purple
+    zodiac = random.choice(["♈", "♑", "♎"])
+    label = "Today favours: "
+    label_bbox = draw.textbbox((0, 0), label, font=font_sm)
+    label_w = label_bbox[2] - label_bbox[0]
+    label_h = label_bbox[3] - label_bbox[1]
+    symbol_bbox = draw.textbbox((0, 0), zodiac, font=font_md)
+    symbol_w = symbol_bbox[2] - symbol_bbox[0]
+    symbol_h = symbol_bbox[3] - symbol_bbox[1]
+    total_w = label_w + symbol_w
+    x = epd.width - MARGIN - total_w
+    y = 30
+    draw.text((x, y), label, font=font_sm, fill=DARK_PURPLE)
+    draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=font_md, fill=DARK_PURPLE)
+
+    # cat in bottom-right corner, safely away from text
     CAT_SIZE = 50
-    MARGIN = 80
-    corners = [
-        (MARGIN, epd.height - MARGIN),           # bottom left
-        (epd.width - MARGIN, epd.height - MARGIN), # bottom right
-        (epd.width - MARGIN, MARGIN),             # top right
-        # top left reserved for text
-    ]
-    cx, cy = random.choice(corners)
+    cx, cy = epd.width - MARGIN, epd.height - MARGIN
     draw_cat(draw, cx, cy, size=CAT_SIZE)
 
     epd.display(epd.getbuffer(Himage))
