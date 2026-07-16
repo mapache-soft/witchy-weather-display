@@ -126,8 +126,8 @@ try:
     draw.text((120, 60), f"hour of {get_planetary_hour()}", font=font_sm, fill=DARK_PURPLE)
 
     # cat in random corner, safely away from text
-    CAT_SIZE = 30
-    MARGIN = 50
+    CAT_SIZE = 50
+    MARGIN = 80
     corners = [
         (MARGIN, epd.height - MARGIN),           # bottom left
         (epd.width - MARGIN, epd.height - MARGIN), # bottom right
