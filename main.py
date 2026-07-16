@@ -180,7 +180,7 @@ try:
     phase_name = get_phase_name(moon_phase)
     bbox = draw.textbbox((0, 0), phase_name, font=font_md)
     tw = bbox[2] - bbox[0]
-    draw.text(((epd.width - tw) // 2, epd.height//2 + 190), phase_name, font=font_md, fill=DARK_PURPLE)
+    draw.text(((epd.width - tw) // 2, epd.height//2 + 170), phase_name, font=font_md, fill=DARK_PURPLE)
 
     # day + planetary hour — top left
     top_left_x = 40
@@ -206,7 +206,7 @@ try:
     weather_x = 40
     next_y = draw_text_line(draw, symbol, weather_x, next_y + 30, font_lg, DARK_PURPLE)
     next_y = draw_text_line(draw, f"H:{high}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=5)
-    draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=30)
+    draw_text_line(draw, f"L:{low}°", weather_x, next_y, font_md, DARK_PURPLE, spacing=50)
 
     # favours — top right, dark purple
     zodiac = random.choice(["♈", "♑", "♎"])
@@ -224,8 +224,9 @@ try:
     draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=font_md, fill=DARK_PURPLE)
 
     # cat in bottom-right corner, safely away from text
-    CAT_SIZE = 50
-    cx, cy = epd.width - MARGIN, epd.height - MARGIN
+    CAT_SIZE = 80
+    CAT_MARGIN = 100
+    cx, cy = epd.width - CAT_MARGIN, epd.height - CAT_MARGIN
     draw_cat(draw, cx, cy, size=CAT_SIZE)
 
     epd.display(epd.getbuffer(Himage))
