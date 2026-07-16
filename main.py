@@ -21,6 +21,7 @@ WHITE        = (255, 255, 255)
 BLACK        = (0, 0, 0)
 DARK_PURPLE  = (60, 20, 90)
 BLUE         = (0, 80, 200)
+ORANGE       = (240, 130, 0)
 YELLOW       = (230, 180, 0)
 SHADOW       = (180, 160, 100)
 
@@ -131,35 +132,41 @@ def draw_moon(draw, cx, cy, radius, phase_value):
                       cx + shadow_offset + radius, cy + radius), fill=SHADOW)
     draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_PURPLE, width=2)
 
-def draw_cat(draw, cx, cy, size):
+def draw_cat(draw, cx, cy, size, color=BLACK):
     # head
-    draw.ellipse((cx-size, cy-size, cx+size, cy+size), fill=BLACK, outline=BLACK)
+    draw.ellipse((cx-size, cy-size, cx+size, cy+size), fill=color, outline=color)
     # ears
     ear = size // 2
     draw.polygon([
         (cx-size, cy-size+4),
         (cx-size+ear, cy-size-ear),
         (cx-ear, cy-size+4)
-    ], fill=BLACK)
+    ], fill=color)
     draw.polygon([
         (cx+size, cy-size+4),
         (cx+size-ear, cy-size-ear),
         (cx+ear, cy-size+4)
-    ], fill=BLACK)
+    ], fill=color)
     # blue eyes
+    eye_r = max(4, size // 8)
     eye_y = cy - size // 4
-    draw.ellipse((cx-size//2-4, eye_y-4, cx-size//2+4, eye_y+4), fill=BLUE)
-    draw.ellipse((cx+size//2-4, eye_y-4, cx+size//2+4, eye_y+4), fill=BLUE)
+    draw.ellipse((cx-size//2-eye_r, eye_y-eye_r, cx-size//2+eye_r, eye_y+eye_r), fill=BLUE)
+    draw.ellipse((cx+size//2-eye_r, eye_y-eye_r, cx+size//2+eye_r, eye_y+eye_r), fill=BLUE)
     # nose
-    draw.polygon([(cx, cy+4), (cx-3, cy), (cx+3, cy)], fill=WHITE)
+    nose_w = max(3, size // 8)
+    nose_h = max(2, size // 12)
+    draw.polygon([(cx, cy+nose_h), (cx-nose_w, cy), (cx+nose_w, cy)], fill=WHITE)
     # mouth
-    draw.line((cx, cy+6, cx-3, cy+10), fill=WHITE, width=1)
-    draw.line((cx, cy+6, cx+3, cy+10), fill=WHITE, width=1)
+    mouth_len = max(4, size // 7)
+    mouth_down = max(4, size // 10)
+    draw.line((cx, cy+nose_h+2, cx-mouth_len, cy+nose_h+mouth_down), fill=WHITE, width=2)
+    draw.line((cx, cy+nose_h+2, cx+mouth_len, cy+nose_h+mouth_down), fill=WHITE, width=2)
     # whiskers
-    draw.line((cx-size, cy,   cx-size//2-4, cy+2),  fill=WHITE, width=1)
-    draw.line((cx-size, cy+8, cx-size//2-4, cy+4),  fill=WHITE, width=1)
-    draw.line((cx+size, cy,   cx+size//2+4, cy+2),  fill=WHITE, width=1)
-    draw.line((cx+size, cy+8, cx+size//2+4, cy+4),  fill=WHITE, width=1)
+    whisker_end = size // 2 + size // 6
+    draw.line((cx-size, cy,                cx-whisker_end, cy+size//12),     fill=WHITE, width=2)
+    draw.line((cx-size, cy+size//6,        cx-whisker_end, cy+size//8),      fill=WHITE, width=2)
+    draw.line((cx+size, cy,                cx+whisker_end, cy+size//12),     fill=WHITE, width=2)
+    draw.line((cx+size, cy+size//6,        cx+whisker_end, cy+size//8),      fill=WHITE, width=2)
 
 try:
     epd = epd7in3e.EPD()
@@ -170,7 +177,6 @@ try:
     font_sm = ImageFont.truetype(FONT_PATH, 44)
     font_md = ImageFont.truetype(FONT_PATH, 56)
     font_lg = ImageFont.truetype(FONT_PATH, 72)
-    MARGIN = 80
 
     # moon
     moon_phase = phase(date.today())
@@ -225,9 +231,10 @@ try:
 
     # cat in bottom-right corner, safely away from text
     CAT_SIZE = 80
-    CAT_MARGIN = 100
+    CAT_MARGIN = 140
+    cat_color = random.choice([BLACK, ORANGE])
     cx, cy = epd.width - CAT_MARGIN, epd.height - CAT_MARGIN
-    draw_cat(draw, cx, cy, size=CAT_SIZE)
+    draw_cat(draw, cx, cy, size=CAT_SIZE, color=cat_color)
 
     epd.display(epd.getbuffer(Himage))
     epd.sleep()
