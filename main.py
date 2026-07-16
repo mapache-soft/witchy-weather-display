@@ -44,6 +44,16 @@ DAY_PLANETS = {
 
 PLANETARY_HOURS = ["sun", "venus", "mercury", "moon", "saturn", "jupiter", "mars"]
 
+PLANET_SYMBOLS = {
+    "moon": "☽",
+    "mars": "♂",
+    "mercury": "☿",
+    "jupiter": "♃",
+    "venus": "♀",
+    "saturn": "♄",
+    "sun": "☉",
+}
+
 WEATHER_LAT = 48.2082
 WEATHER_LON = 16.3738
 WINDY_THRESHOLD = 30
@@ -203,8 +213,10 @@ try:
     draw.text(((epd.width - tw) // 2, epd.height//2 + 195), phase_name, font=font_md, fill=DARK_PURPLE)
 
     # day + planetary hour — top left, safely clear of cat
-    draw.text((120, 50), f"day of {get_day_planet()}", font=font_sm, fill=DARK_PURPLE)
-    draw.text((120, 110), f"hour of {get_planetary_hour()}", font=font_sm, fill=DARK_PURPLE)
+    day_symbol = PLANET_SYMBOLS[get_day_planet()]
+    hour_symbol = PLANET_SYMBOLS[get_planetary_hour()]
+    draw.text((120, 50), f"Day: {day_symbol}", font=font_sm, fill=DARK_PURPLE)
+    draw.text((120, 110), f"Hour: {hour_symbol}", font=font_sm, fill=DARK_PURPLE)
 
     # weather — left side, below day/hour
     weather = get_weather_data()
@@ -226,9 +238,9 @@ try:
     if wind_message:
         draw_wrapped_text(draw, wind_message, weather_x, next_y, max_width=230, font=font_sm, fill=DARK_PURPLE)
 
-    # today favours — top right, dark purple
+    # favours — top right, dark purple
     zodiac = random.choice(["♈", "♑", "♎"])
-    label = "Today favours: "
+    label = "Favours: "
     label_bbox = draw.textbbox((0, 0), label, font=font_sm)
     label_w = label_bbox[2] - label_bbox[0]
     label_h = label_bbox[3] - label_bbox[1]
