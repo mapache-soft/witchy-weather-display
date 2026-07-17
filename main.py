@@ -237,12 +237,12 @@ try:
     label_w = label_bbox[2] - label_bbox[0]
     label_h = label_bbox[3] - label_bbox[1]
     draw.text((day_x + label_w + 10, day_y + label_h // 2), day_symbol,
-              font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
+              font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     hour_x = top_left_x
     hour_y = day_y + label_h + 10
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
     draw.text((hour_x + label_w + 10, hour_y + label_h // 2), hour_symbol,
-              font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
+              font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     next_y = hour_y + label_h
 
     # weather — left side, below day/hour
@@ -293,7 +293,7 @@ try:
     x = epd.width - 40 - total_w
     y = 10 - label_bbox[1]
     draw.text((x, y), label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((x + label_w, y + label_h // 2), zodiac,
+    draw.text((x + label_w, y + label_h // 2 + 10), zodiac,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
 
     # cat in bottom-right corner, safely away from text
