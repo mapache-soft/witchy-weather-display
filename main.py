@@ -236,12 +236,12 @@ try:
     draw.text((day_x, day_y), day_label, font=font_sm, fill=DARK_PURPLE)
     label_w = label_bbox[2] - label_bbox[0]
     label_h = label_bbox[3] - label_bbox[1]
-    draw.text((day_x + label_w, day_y + label_h // 2), day_symbol,
+    draw.text((day_x + label_w + 10, day_y + label_h // 2), day_symbol,
               font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
     hour_x = top_left_x
     hour_y = day_y + label_h + 10
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((hour_x + label_w, hour_y + label_h // 2), hour_symbol,
+    draw.text((hour_x + label_w + 10, hour_y + label_h // 2), hour_symbol,
               font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
     next_y = hour_y + label_h
 
@@ -264,12 +264,12 @@ try:
     # large weather symbol above the cat
     cat_cx = epd.width - CAT_X_MARGIN
     cat_cy = epd.height - CAT_Y_MARGIN
-    sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xl)
+    sym_bbox = draw.textbbox((0, 0), symbol, font=font_xl)
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 50
-    draw.text((sym_x, sym_y), symbol, font=symbol_xl, fill=DARK_PURPLE)
+    sym_y = (cat_cy - CAT_SIZE) - sym_h - 100
+    draw.text((sym_x, sym_y), symbol, font=font_xl, fill=DARK_PURPLE)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
