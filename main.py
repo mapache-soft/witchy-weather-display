@@ -234,12 +234,16 @@ try:
     day_x = top_left_x
     day_y = line_y - label_bbox[1]
     draw.text((day_x, day_y), day_label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((day_x + label_bbox[2] - label_bbox[0], day_y + (label_bbox[3] - label_bbox[1] - (symbol_bbox[3] - symbol_bbox[1])) // 2), day_symbol, font=symbol_sm, fill=DARK_PURPLE)
+    label_w = label_bbox[2] - label_bbox[0]
+    label_h = label_bbox[3] - label_bbox[1]
+    draw.text((day_x + label_w, day_y + label_h // 2), day_symbol,
+              font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
     hour_x = top_left_x
-    hour_y = day_y + (label_bbox[3] - label_bbox[1]) + 10
+    hour_y = day_y + label_h + 10
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((hour_x + label_bbox[2] - label_bbox[0], hour_y), hour_symbol, font=symbol_sm, fill=DARK_PURPLE)
-    next_y = hour_y + (label_bbox[3] - label_bbox[1])
+    draw.text((hour_x + label_w, hour_y + label_h // 2), hour_symbol,
+              font=symbol_sm, fill=DARK_PURPLE, anchor="lm")
+    next_y = hour_y + label_h
 
     # weather — left side, below day/hour
     weather = get_weather_data()
@@ -264,7 +268,7 @@ try:
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 30
+    sym_y = (cat_cy - CAT_SIZE) - sym_h + 30
     draw.text((sym_x, sym_y), symbol, font=symbol_xl, fill=DARK_PURPLE)
 
     # windy warning — above the moon
@@ -289,7 +293,8 @@ try:
     x = epd.width - 40 - total_w
     y = 10 - label_bbox[1]
     draw.text((x, y), label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=symbol_md, fill=DARK_PURPLE)
+    draw.text((x + label_w, y + label_h // 2), zodiac,
+              font=symbol_md, fill=DARK_PURPLE, anchor="lm")
 
     # cat in bottom-right corner, safely away from text
     cat_color = random.choice([BLACK, ORANGE])
