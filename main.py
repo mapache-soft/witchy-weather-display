@@ -26,7 +26,22 @@ ORANGE       = (240, 130, 0)
 YELLOW       = (230, 180, 0)
 SHADOW       = (180, 160, 100)
 
-FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+TEXT_FONT_PATHS = [
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+]
+SYMBOL_FONT_PATHS = [
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf',
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+]
+
+def load_font(size, paths):
+    for path in paths:
+        if os.path.exists(path):
+            return ImageFont.truetype(path, size)
+    return ImageFont.load_default()
 
 PHASE_NAMES = [
     (0,  1,  "new moon"),
@@ -186,10 +201,13 @@ try:
     Himage = Image.new('RGB', (epd.width, epd.height), WHITE)
     draw = ImageDraw.Draw(Himage)
 
-    font_sm = ImageFont.truetype(FONT_PATH, 44)
-    font_md = ImageFont.truetype(FONT_PATH, 56)
-    font_lg = ImageFont.truetype(FONT_PATH, 72)
-    font_xl = ImageFont.truetype(FONT_PATH, 96)
+    font_sm = load_font(44, TEXT_FONT_PATHS)
+    font_md = load_font(56, TEXT_FONT_PATHS)
+    font_lg = load_font(72, TEXT_FONT_PATHS)
+    font_xl = load_font(96, TEXT_FONT_PATHS)
+    symbol_sm = load_font(56, SYMBOL_FONT_PATHS)
+    symbol_md = load_font(72, SYMBOL_FONT_PATHS)
+    symbol_xl = load_font(96, SYMBOL_FONT_PATHS)
     CAT_SIZE = 80
     CAT_X_MARGIN = 100
     CAT_Y_MARGIN = 140
@@ -206,13 +224,22 @@ try:
 
     # day + planetary hour — top left
     top_left_x = 40
+    line_y = 10
+    day_label = "Day: "
+    hour_label = "Hour: "
     day_symbol = PLANET_SYMBOLS[get_day_planet()]
     hour_symbol = PLANET_SYMBOLS[get_planetary_hour()]
-    day_text = f"Day: {day_symbol}"
-    hour_text = f"Hour: {hour_symbol}"
-    day_bbox = draw.textbbox((0, 0), day_text, font=font_sm)
-    next_y = draw_text_line(draw, day_text, top_left_x, 10 - day_bbox[1], font_sm, DARK_PURPLE)
-    next_y = draw_text_line(draw, hour_text, top_left_x, next_y, font_sm, DARK_PURPLE)
+    label_bbox = draw.textbbox((0, 0), day_label, font=font_sm)
+    symbol_bbox = draw.textbbox((0, 0), day_symbol, font=symbol_sm)
+    day_x = top_left_x
+    day_y = line_y - label_bbox[1]
+    draw.text((day_x, day_y), day_label, font=font_sm, fill=DARK_PURPLE)
+    draw.text((day_x + label_bbox[2] - label_bbox[0], day_y + (label_bbox[3] - label_bbox[1] - (symbol_bbox[3] - symbol_bbox[1])) // 2), day_symbol, font=symbol_sm, fill=DARK_PURPLE)
+    hour_x = top_left_x
+    hour_y = day_y + (label_bbox[3] - label_bbox[1]) + 10
+    draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
+    draw.text((hour_x + label_bbox[2] - label_bbox[0], hour_y), hour_symbol, font=symbol_sm, fill=DARK_PURPLE)
+    next_y = hour_y + (label_bbox[3] - label_bbox[1])
 
     # weather — left side, below day/hour
     weather = get_weather_data()
@@ -233,12 +260,12 @@ try:
     # large weather symbol above the cat
     cat_cx = epd.width - CAT_X_MARGIN
     cat_cy = epd.height - CAT_Y_MARGIN
-    sym_bbox = draw.textbbox((0, 0), symbol, font=font_xl)
+    sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xl)
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
     sym_y = (cat_cy - CAT_SIZE) - sym_h - 10
-    draw.text((sym_x, sym_y), symbol, font=font_xl, fill=DARK_PURPLE)
+    draw.text((sym_x, sym_y), symbol, font=symbol_xl, fill=DARK_PURPLE)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
@@ -255,14 +282,14 @@ try:
     label_bbox = draw.textbbox((0, 0), label, font=font_sm)
     label_w = label_bbox[2] - label_bbox[0]
     label_h = label_bbox[3] - label_bbox[1]
-    symbol_bbox = draw.textbbox((0, 0), zodiac, font=font_md)
+    symbol_bbox = draw.textbbox((0, 0), zodiac, font=symbol_md)
     symbol_w = symbol_bbox[2] - symbol_bbox[0]
     symbol_h = symbol_bbox[3] - symbol_bbox[1]
     total_w = label_w + symbol_w
     x = epd.width - 40 - total_w
     y = 10 - label_bbox[1]
     draw.text((x, y), label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=font_md, fill=DARK_PURPLE)
+    draw.text((x + label_w, y + (label_h - symbol_h) // 2), zodiac, font=symbol_md, fill=DARK_PURPLE)
 
     # cat in bottom-right corner, safely away from text
     cat_color = random.choice([BLACK, ORANGE])
