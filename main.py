@@ -31,16 +31,34 @@ TEXT_FONT_PATHS = [
     '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
 ]
 SYMBOL_FONT_PATHS = [
-    '/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf',
-    '/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf',
-    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
     '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf',
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf',
 ]
 
-def load_font(size, paths):
+def _font_has_all_glyphs(font, text):
+    try:
+        notdef = font.getbbox("\uE000")
+    except Exception:
+        return False
+    for ch in text:
+        try:
+            if font.getbbox(ch) == notdef:
+                return False
+        except Exception:
+            return False
+    return True
+
+def load_font(size, paths, sample_text=None):
     for path in paths:
         if os.path.exists(path):
-            return ImageFont.truetype(path, size)
+            try:
+                font = ImageFont.truetype(path, size)
+                if sample_text is None or _font_has_all_glyphs(font, sample_text):
+                    return font
+            except Exception:
+                continue
     return ImageFont.load_default()
 
 PHASE_NAMES = [
@@ -220,10 +238,11 @@ try:
     font_md = load_font(56, TEXT_FONT_PATHS)
     font_lg = load_font(72, TEXT_FONT_PATHS)
     font_xl = load_font(96, TEXT_FONT_PATHS)
-    symbol_sm = load_font(56, SYMBOL_FONT_PATHS)
-    symbol_md = load_font(72, SYMBOL_FONT_PATHS)
-    symbol_xl = load_font(96, SYMBOL_FONT_PATHS)
-    symbol_xxl = load_font(140, SYMBOL_FONT_PATHS)
+    symbol_sample = "".join(PLANET_SYMBOLS.values()) + "☀⛅☁☔❄⚡"
+    symbol_sm = load_font(56, SYMBOL_FONT_PATHS, symbol_sample)
+    symbol_md = load_font(72, SYMBOL_FONT_PATHS, symbol_sample)
+    symbol_xl = load_font(96, SYMBOL_FONT_PATHS, symbol_sample)
+    symbol_xxl = load_font(140, SYMBOL_FONT_PATHS, symbol_sample)
     CAT_SIZE = 80
     CAT_X_MARGIN = 100
     CAT_Y_MARGIN = 140
