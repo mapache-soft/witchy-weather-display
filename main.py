@@ -133,6 +133,21 @@ def get_weather_symbol(code):
         return "⚡"
     return "☁"
 
+def get_weather_color(code):
+    if code == 0:
+        return YELLOW
+    if code in (1, 2, 3):
+        return ORANGE
+    if code in (45, 48):
+        return BLACK
+    if code in (51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82):
+        return BLUE
+    if code in (71, 73, 75, 77, 85, 86):
+        return DARK_PURPLE
+    if code in (95, 96, 99):
+        return RED
+    return BLACK
+
 def get_wind_message(max_wind_kmh):
     if max_wind_kmh >= WINDY_THRESHOLD:
         return "It fucken WIMDY"
@@ -208,6 +223,7 @@ try:
     symbol_sm = load_font(56, SYMBOL_FONT_PATHS)
     symbol_md = load_font(72, SYMBOL_FONT_PATHS)
     symbol_xl = load_font(96, SYMBOL_FONT_PATHS)
+    symbol_xxl = load_font(140, SYMBOL_FONT_PATHS)
     CAT_SIZE = 80
     CAT_X_MARGIN = 100
     CAT_Y_MARGIN = 140
@@ -241,7 +257,7 @@ try:
     hour_x = top_left_x
     hour_y = day_y + label_h + 10
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((hour_x + label_w + 10, hour_y + label_h // 2), hour_symbol,
+    draw.text((hour_x + label_w + 10, hour_y - 5 + label_h // 2), hour_symbol,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     next_y = hour_y + label_h
 
@@ -258,18 +274,19 @@ try:
 
     weather_x = 40
     temps_y = next_y + 30
-    next_y = draw_text_line(draw, f"{high}°", weather_x, temps_y, font_md, RED, spacing=5)
+    next_y = draw_text_line(draw, f"{high}°", weather_x, temps_y, font_md, RED, spacing=10)
     draw_text_line(draw, f"{low}°", weather_x, next_y, font_md, BLUE, spacing=50)
 
     # large weather symbol above the cat
     cat_cx = epd.width - CAT_X_MARGIN
     cat_cy = epd.height - CAT_Y_MARGIN
-    sym_bbox = draw.textbbox((0, 0), symbol, font=font_xl)
+    weather_color = get_weather_color(weather["code"]) if weather else DARK_PURPLE
+    sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xxl)
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 100
-    draw.text((sym_x, sym_y), symbol, font=font_xl, fill=DARK_PURPLE)
+    sym_y = (cat_cy - CAT_SIZE) - sym_h - 60
+    draw.text((sym_x, sym_y), symbol, font=symbol_xxl, fill=weather_color)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
