@@ -264,7 +264,7 @@ try:
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 10
+    sym_y = (cat_cy - CAT_SIZE) - sym_h - 30
     draw.text((sym_x, sym_y), symbol, font=symbol_xl, fill=DARK_PURPLE)
 
     # windy warning — above the moon
