@@ -253,12 +253,12 @@ try:
     draw.text((day_x, day_y), day_label, font=font_sm, fill=DARK_PURPLE)
     label_w = label_bbox[2] - label_bbox[0]
     label_h = label_bbox[3] - label_bbox[1]
-    draw.text((day_x + label_w + 10, day_y + label_h // 2), day_symbol,
+    draw.text((day_x + label_w + 10, day_y + 5 + label_h // 2), day_symbol,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     hour_x = top_left_x
     hour_y = day_y + label_h + 10
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
-    draw.text((hour_x + label_w + 10, hour_y - 5 + label_h // 2), hour_symbol,
+    draw.text((hour_x + label_w + 10, hour_y + label_h // 2), hour_symbol,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     next_y = hour_y + label_h
 
@@ -276,7 +276,7 @@ try:
     weather_x = 40
     temps_y = next_y + 30
     next_y = draw_text_line(draw, f"{high}°", weather_x, temps_y, font_md, RED, spacing=10)
-    draw_text_line(draw, f"{low}°", weather_x, next_y, font_md, BLUE, spacing=50)
+    draw_text_line(draw, f"{low}°", weather_x, next_y + 10, font_md, BLUE, spacing=50)
 
     # large weather symbol above the cat
     cat_cx = epd.width - CAT_X_MARGIN
