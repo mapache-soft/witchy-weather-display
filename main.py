@@ -256,7 +256,7 @@ try:
     draw.text((day_x + label_w + 10, day_y + 5 + label_h // 2), day_symbol,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
     hour_x = top_left_x
-    hour_y = day_y + label_h + 10
+    hour_y = day_y + label_h + 20
     draw.text((hour_x, hour_y), hour_label, font=font_sm, fill=DARK_PURPLE)
     draw.text((hour_x + label_w + 10, hour_y + label_h // 2), hour_symbol,
               font=symbol_md, fill=DARK_PURPLE, anchor="lm")
@@ -274,9 +274,19 @@ try:
         low = "?"
 
     weather_x = 40
-    temps_y = next_y + 30
-    next_y = draw_text_line(draw, f"{high}°", weather_x, temps_y, font_md, RED, spacing=10)
-    draw_text_line(draw, f"{low}°", weather_x, next_y + 10, font_md, BLUE, spacing=50)
+    temp_font = font_lg
+    high_text = f"{high}°"
+    low_text = f"{low}°"
+    high_bbox = draw.textbbox((0, 0), high_text, font=temp_font)
+    low_bbox = draw.textbbox((0, 0), low_text, font=temp_font)
+    high_h = high_bbox[3] - high_bbox[1]
+    low_h = low_bbox[3] - low_bbox[1]
+    temp_gap = 20
+    block_h = high_h + temp_gap + low_h
+    center_y = epd.height // 2
+    temps_top = center_y - block_h // 2
+    draw.text((weather_x, temps_top), high_text, font=temp_font, fill=RED)
+    draw.text((weather_x, temps_top + high_h + temp_gap), low_text, font=temp_font, fill=BLUE)
 
     # large weather symbol above the cat
     cat_cx = epd.width - CAT_X_MARGIN
@@ -286,7 +296,7 @@ try:
     sym_w = sym_bbox[2] - sym_bbox[0]
     sym_h = sym_bbox[3] - sym_bbox[1]
     sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 60
+    sym_y = (cat_cy - CAT_SIZE) - sym_h - 70
     draw.text((sym_x, sym_y), symbol, font=symbol_xxl, fill=weather_color)
 
     # windy warning — above the moon
