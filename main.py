@@ -13,6 +13,7 @@ from astral import LocationInfo
 from astral.sun import sun
 from datetime import date, datetime
 import json
+import math
 import random
 import urllib.request
 logging.basicConfig(level=logging.DEBUG)
@@ -119,20 +120,20 @@ def get_weather_data():
         logging.warning("weather fetch failed: %s", e)
         return None
 
-def get_weather_symbol(code):
+def get_weather_kind(code):
     if code == 0:
-        return "☀"
+        return "sun"
     if code in (1, 2, 3):
-        return "⛅"
+        return "partly"
     if code in (45, 48):
-        return "☁"
+        return "cloud"
     if code in (51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82):
-        return "☔"
+        return "rain"
     if code in (71, 73, 75, 77, 85, 86):
-        return "❄"
+        return "snow"
     if code in (95, 96, 99):
-        return "⚡"
-    return "☁"
+        return "storm"
+    return "cloud"
 
 def get_weather_color(code):
     if code == 0:
@@ -153,6 +154,74 @@ def get_wind_message(max_wind_kmh):
     if max_wind_kmh >= WINDY_THRESHOLD:
         return "It fucken WIMDY"
     return None
+
+def _draw_sun_disk(draw, cx, cy, r, color):
+    draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=color)
+    ray_inner = r + max(4, r // 4)
+    ray_outer = r + max(10, r // 2)
+    for i in range(8):
+        angle = i * math.pi / 4
+        x1 = cx + int(ray_inner * math.cos(angle))
+        y1 = cy + int(ray_inner * math.sin(angle))
+        x2 = cx + int(ray_outer * math.cos(angle))
+        y2 = cy + int(ray_outer * math.sin(angle))
+        draw.line((x1, y1, x2, y2), fill=color, width=max(3, r // 5))
+
+def _draw_cloud(draw, cx, cy, w, h, color):
+    left = cx - w // 2
+    top = cy - h // 2
+    r1 = h // 2
+    r2 = int(h * 0.42)
+    r3 = int(h * 0.38)
+    draw.ellipse((left, cy - r1, left + 2 * r1, cy + r1), fill=color)
+    draw.ellipse((left + w // 5, top, left + w // 5 + 2 * r2, top + 2 * r2), fill=color)
+    draw.ellipse((cx - r3, top + h // 10, cx + r3, top + h // 10 + 2 * r3), fill=color)
+    draw.ellipse((left + w - 2 * r1, cy - r1, left + w, cy + r1), fill=color)
+    draw.rectangle((left + r1 // 2, cy - h // 6, left + w - r1 // 2, cy + r1), fill=color)
+
+def draw_weather_icon(draw, cx, cy, size, kind, color):
+    if kind == "sun":
+        _draw_sun_disk(draw, cx, cy, size // 3, color)
+        return
+    if kind == "partly":
+        sun_r = size // 5
+        _draw_sun_disk(draw, cx - size // 6, cy - size // 6, sun_r, YELLOW)
+        _draw_cloud(draw, cx + size // 10, cy + size // 10, int(size * 0.85), int(size * 0.45), color)
+        return
+    if kind == "cloud":
+        _draw_cloud(draw, cx, cy, int(size * 0.95), int(size * 0.5), color)
+        return
+    if kind == "rain":
+        _draw_cloud(draw, cx, cy - size // 8, int(size * 0.9), int(size * 0.42), color)
+        drop_y = cy + size // 6
+        for dx in (-size // 4, 0, size // 4):
+            draw.line((cx + dx, drop_y, cx + dx - 4, drop_y + size // 4),
+                      fill=BLUE, width=max(3, size // 18))
+        return
+    if kind == "snow":
+        _draw_cloud(draw, cx, cy - size // 8, int(size * 0.9), int(size * 0.42), color)
+        flake_y = cy + size // 5
+        for dx in (-size // 4, 0, size // 4):
+            fx, fy = cx + dx, flake_y
+            arm = max(4, size // 14)
+            draw.line((fx - arm, fy, fx + arm, fy), fill=color, width=2)
+            draw.line((fx, fy - arm, fx, fy + arm), fill=color, width=2)
+            draw.line((fx - arm, fy - arm, fx + arm, fy + arm), fill=color, width=2)
+            draw.line((fx - arm, fy + arm, fx + arm, fy - arm), fill=color, width=2)
+        return
+    if kind == "storm":
+        _draw_cloud(draw, cx, cy - size // 8, int(size * 0.9), int(size * 0.42), BLACK)
+        bolt = [
+            (cx + size // 12, cy - size // 20),
+            (cx - size // 10, cy + size // 8),
+            (cx + size // 30, cy + size // 8),
+            (cx - size // 8, cy + size // 3),
+            (cx + size // 6, cy + size // 12),
+            (cx + size // 40, cy + size // 12),
+        ]
+        draw.polygon(bolt, fill=YELLOW)
+        return
+    _draw_cloud(draw, cx, cy, int(size * 0.95), int(size * 0.5), color)
 
 def draw_text_line(draw, text, x, y, font, fill, spacing=10):
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -265,11 +334,11 @@ try:
     # weather — left side, below day/hour
     weather = get_weather_data()
     if weather:
-        symbol = get_weather_symbol(weather["code"])
+        weather_kind = get_weather_kind(weather["code"])
         high = weather["high"]
         low = weather["low"]
     else:
-        symbol = "?"
+        weather_kind = "cloud"
         high = "?"
         low = "?"
 
@@ -288,16 +357,14 @@ try:
     draw.text((weather_x, temps_top), high_text, font=temp_font, fill=RED)
     draw.text((weather_x, temps_top + high_h + temp_gap), low_text, font=temp_font, fill=BLUE)
 
-    # large weather symbol above the cat
+    # large weather icon above the cat (drawn geometry, not emoji)
     cat_cx = epd.width - CAT_X_MARGIN
     cat_cy = epd.height - CAT_Y_MARGIN
     weather_color = get_weather_color(weather["code"]) if weather else DARK_PURPLE
-    sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xxl)
-    sym_w = sym_bbox[2] - sym_bbox[0]
-    sym_h = sym_bbox[3] - sym_bbox[1]
-    sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 70
-    draw.text((sym_x, sym_y), symbol, font=symbol_xxl, fill=weather_color)
+    icon_size = 120
+    icon_cx = cat_cx
+    icon_cy = (cat_cy - CAT_SIZE) - icon_size // 2 - 40
+    draw_weather_icon(draw, icon_cx, icon_cy, icon_size, weather_kind, weather_color)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
