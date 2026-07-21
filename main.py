@@ -13,6 +13,7 @@ from astral import LocationInfo
 from astral.sun import sun
 from datetime import date, datetime
 import json
+import math
 import random
 import urllib.request
 logging.basicConfig(level=logging.DEBUG)
@@ -211,6 +212,20 @@ def draw_cat(draw, cx, cy, size, color=BLACK):
     draw.line((cx+size, cy,                cx+whisker_end, cy+size//12),     fill=WHITE, width=2)
     draw.line((cx+size, cy+size//6,        cx+whisker_end, cy+size//8),      fill=WHITE, width=2)
 
+def draw_sun(draw, cx, cy, size, color):
+    r = size // 3
+    draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=color)
+    ray_inner = r + max(4, size // 10)
+    ray_outer = size // 2
+    width = max(3, size // 12)
+    for i in range(8):
+        angle = math.radians(i * 45)
+        x0 = cx + int(ray_inner * math.cos(angle))
+        y0 = cy + int(ray_inner * math.sin(angle))
+        x1 = cx + int(ray_outer * math.cos(angle))
+        y1 = cy + int(ray_outer * math.sin(angle))
+        draw.line((x0, y0, x1, y1), fill=color, width=width)
+
 try:
     epd = epd7in3e.EPD()
     epd.init()
@@ -292,12 +307,18 @@ try:
     cat_cx = epd.width - CAT_X_MARGIN
     cat_cy = epd.height - CAT_Y_MARGIN
     weather_color = get_weather_color(weather["code"]) if weather else DARK_PURPLE
-    sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xxl)
-    sym_w = sym_bbox[2] - sym_bbox[0]
-    sym_h = sym_bbox[3] - sym_bbox[1]
-    sym_x = cat_cx - sym_w // 2
-    sym_y = (cat_cy - CAT_SIZE) - sym_h - 70
-    draw.text((sym_x, sym_y), symbol, font=symbol_xxl, fill=weather_color)
+    if weather and weather["code"] == 0:
+        sun_size = 120
+        sym_x = cat_cx
+        sym_y = (cat_cy - CAT_SIZE) - sun_size // 2 - 70
+        draw_sun(draw, sym_x, sym_y, sun_size, weather_color)
+    else:
+        sym_bbox = draw.textbbox((0, 0), symbol, font=symbol_xxl)
+        sym_w = sym_bbox[2] - sym_bbox[0]
+        sym_h = sym_bbox[3] - sym_bbox[1]
+        sym_x = cat_cx - sym_w // 2
+        sym_y = (cat_cy - CAT_SIZE) - sym_h - 70
+        draw.text((sym_x, sym_y), symbol, font=symbol_xxl, fill=weather_color)
 
     # windy warning — above the moon
     if weather and weather["wind"] >= WINDY_THRESHOLD:
