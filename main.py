@@ -47,13 +47,13 @@ def load_font(size, paths):
 
 PHASE_NAMES = [
     (0,  1,  "new moon"),
-    (1,  6,  "waxing crescent"),
+    (1,  6,  "waxing croissant"),
     (6,  8,  "first quarter"),
-    (8,  13, "waxing gibbous"),
+    (8,  13, "waxing gibbon"),
     (13, 15, "full moon"),
-    (15, 20, "waning gibbous"),
+    (15, 20, "waning gibbon"),
     (20, 22, "last quarter"),
-    (22, 28, "waning crescent"),
+    (22, 28, "waning croissant"),
 ]
 
 DAY_PLANETS = {
@@ -81,7 +81,7 @@ def get_phase_name(phase_value):
     for lo, hi, name in PHASE_NAMES:
         if lo <= phase_value < hi:
             return name
-    return "waning crescent"
+    return "waning croissant"
 
 def get_day_planet():
     return DAY_PLANETS[date.today().weekday()]
