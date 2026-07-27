@@ -229,26 +229,45 @@ def draw_text_line(draw, text, x, y, font, fill, spacing=10):
     return y + (bbox[3] - bbox[1]) + spacing
 
 def draw_moon(draw, cx, cy, radius, phase_value):
-    moon_img = Image.new('RGB', (radius*2, radius*2), WHITE)
+    """Northern-hemisphere moon: waxing lit on the right, waning on the left."""
+    size = max(2, int(radius) * 2)
+    radius = size // 2
+    moon_img = Image.new("RGB", (size, size), WHITE)
     moon_draw = ImageDraw.Draw(moon_img)
 
-    moon_draw.ellipse((0, 0, radius*2, radius*2), fill=YELLOW)
+    p = phase_value % 28.0
+    angle = math.pi * (p / 14.0)
+    cos_a = math.cos(angle)
+    term_half = max(1, int(round(abs(cos_a) * radius)))
+    left = radius - term_half
+    right = radius + term_half
 
-    if phase_value < 14:
-        fraction = phase_value / 14.0
-        shadow_offset = int(radius * (1 - 2 * fraction))
+    moon_draw.ellipse((0, 0, size - 1, size - 1), fill=YELLOW)
+
+    if p <= 14:
+        # waxing: shadow on the left, lit grows on the right
+        moon_draw.rectangle((0, 0, radius, size), fill=SHADOW)
+        if cos_a >= 0:
+            moon_draw.ellipse((left, 0, right, size - 1), fill=SHADOW)
+        else:
+            moon_draw.ellipse((left, 0, right, size - 1), fill=YELLOW)
     else:
-        fraction = (phase_value - 14) / 14.0
-        shadow_offset = int(radius * (2 * fraction - 1))
+        # waning: shadow on the right, lit shrinks on the left
+        moon_draw.rectangle((radius, 0, size, size), fill=SHADOW)
+        if cos_a <= 0:
+            moon_draw.ellipse((left, 0, right, size - 1), fill=YELLOW)
+        else:
+            moon_draw.ellipse((left, 0, right, size - 1), fill=SHADOW)
 
-    moon_draw.ellipse((shadow_offset, 0, shadow_offset + radius*2, radius*2), fill=SHADOW)
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, size - 1, size - 1), fill=255)
+    draw._image.paste(moon_img, (cx - radius, cy - radius), mask)
 
-    mask = Image.new('L', (radius*2, radius*2), 0)
-    ImageDraw.Draw(mask).ellipse((0, 0, radius*2, radius*2), fill=255)
-
-    draw._image.paste(moon_img, (cx-radius, cy-radius), mask)
-
-    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_PURPLE, width=2)
+    draw.ellipse(
+        (cx - radius, cy - radius, cx + radius, cy + radius),
+        outline=DARK_PURPLE,
+        width=2,
+    )
 
 def draw_cat(draw, cx, cy, size, color=BLACK):
     # head
