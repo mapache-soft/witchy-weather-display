@@ -229,19 +229,25 @@ def draw_text_line(draw, text, x, y, font, fill, spacing=10):
     return y + (bbox[3] - bbox[1]) + spacing
 
 def draw_moon(draw, cx, cy, radius, phase_value):
-    draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=YELLOW)
+    moon_img = Image.new('RGB', (radius*2, radius*2), WHITE)
+    moon_draw = ImageDraw.Draw(moon_img)
+
+    moon_draw.ellipse((0, 0, radius*2, radius*2), fill=YELLOW)
+
     if phase_value < 14:
         fraction = phase_value / 14.0
         shadow_offset = int(radius * (1 - 2 * fraction))
-        draw.ellipse((cx + shadow_offset - radius, cy - radius,
-                      cx + shadow_offset + radius, cy + radius), fill=SHADOW)
     else:
         fraction = (phase_value - 14) / 14.0
         shadow_offset = int(radius * (2 * fraction - 1))
-        draw.ellipse((cx + shadow_offset - radius, cy - radius,
-                      cx + shadow_offset + radius, cy + radius), fill=SHADOW)
-    # keep the shadow inside the moon disk
-    draw.ellipse((cx-2*radius, cy-2*radius, cx+2*radius, cy+2*radius), outline=WHITE, width=radius)
+
+    moon_draw.ellipse((shadow_offset, 0, shadow_offset + radius*2, radius*2), fill=SHADOW)
+
+    mask = Image.new('L', (radius*2, radius*2), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, radius*2, radius*2), fill=255)
+
+    draw._image.paste(moon_img, (cx-radius, cy-radius), mask)
+
     draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=DARK_PURPLE, width=2)
 
 def draw_cat(draw, cx, cy, size, color=BLACK):
